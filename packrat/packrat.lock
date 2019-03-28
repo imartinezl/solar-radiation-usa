@@ -13,12 +13,6 @@ Source: CRAN
 Version: 7.3-51.1
 Hash: af8e6922880d7f071829628198cc3f13
 
-Package: Matrix
-Source: CRAN
-Version: 1.2-15
-Hash: d1bdb46e08828615f3182e2e0375f86a
-Requires: lattice
-
 Package: R6
 Source: CRAN
 Version: 2.3.0
@@ -73,10 +67,10 @@ Hash: 65f62365ec69ddd17230d2ffe891a6ab
 
 Package: dplyr
 Source: CRAN
-Version: 0.7.8
-Hash: c965954fb9a071cb0e5194528223aa72
-Requires: BH, R6, Rcpp, assertthat, bindrcpp, glue, magrittr,
-    pkgconfig, plogr, rlang, tibble, tidyselect
+Version: 0.8.0.1
+Hash: a6547ccd9975f65dac0e46ce4b4e324e
+Requires: BH, R6, Rcpp, assertthat, glue, magrittr, pkgconfig, plogr,
+    rlang, tibble, tidyselect
 
 Package: fansi
 Source: CRAN
@@ -87,7 +81,7 @@ Package: ggplot2
 Source: CRAN
 Version: 3.1.0
 Hash: ef541b05dda10b209d509b5bbaf46ea3
-Requires: MASS, digest, gtable, lazyeval, mgcv, plyr, reshape2, rlang,
+Requires: MASS, digest, gtable, lazyeval, plyr, reshape2, rlang,
     scales, tibble, viridisLite, withr
 
 Package: glue
@@ -118,6 +112,7 @@ Hash: 88926ad9c43581fd0822a37c8ed09f05
 Package: lubridate
 Source: CRAN
 Version: 1.7.4
+Hash: a7c783782f0e50be33b31f859c11333e
 Requires: Rcpp, stringr
 
 Package: magrittr
@@ -125,23 +120,11 @@ Source: CRAN
 Version: 1.5
 Hash: bdc4d48c3135e8f3b399536ddf160df4
 
-Package: mgcv
-Source: CRAN
-Version: 1.8-26
-Hash: e02928c5c84951987f5c0d55079e6576
-Requires: Matrix, nlme
-
 Package: munsell
 Source: CRAN
 Version: 0.5.0
 Hash: 38d0efee9bb99bef143bde41c4ce715c
 Requires: colorspace
-
-Package: nlme
-Source: CRAN
-Version: 3.1-137
-Hash: 6166071071587a867cbe534e84fc5c0c
-Requires: lattice
 
 Package: packrat
 Source: CRAN
@@ -172,8 +155,8 @@ Requires: Rcpp
 
 Package: purrr
 Source: CRAN
-Version: 0.3.0
-Hash: 39be04d964bc2b860f09147ce4b8e2ef
+Version: 0.3.2
+Hash: d7bb7f62bb3af2d6510f50cb7190a060
 Requires: magrittr, rlang
 
 Package: reshape2
@@ -206,8 +189,8 @@ Requires: glue, magrittr, stringi
 
 Package: tibble
 Source: CRAN
-Version: 2.0.1
-Hash: d2a00b9a314cfad8f6b51e2c97aaff5c
+Version: 2.1.1
+Hash: e9d844f966bd4d40556b50c3b2239646
 Requires: cli, crayon, fansi, pillar, pkgconfig, rlang
 
 Package: tidyselect
@@ -234,3 +217,4 @@ Hash: d534108bcd5f34ec73e9eb523751ba20
 Package: zeallot
 Source: CRAN
 Version: 0.1.0
+Hash: 10b2ed48e202b4db421ae864041dc4b2
