@@ -1,6 +1,11 @@
 
+
+# Libraries ---------------------------------------------------------------
+
 library(dplyr)
 library(zeallot)
+
+# Data Importation --------------------------------------------------------
 
 metadata <- read.csv('TMY3_StationsMeta.csv')
 
@@ -53,6 +58,9 @@ data <- read.csv('725090TYA.CSV', skip = 1, header = T, col.names = data_header)
   dplyr::ungroup()
 data[1:25,] %>% View
 
+
+# Exploration Plots -------------------------------------------------------
+
 ggplot2::ggplot(data)+
   ggplot2::geom_point(ggplot2::aes(x=date_local, y=ETR.Wh.m2.), na.rm=T)+
   ggplot2::scale_x_datetime()
@@ -70,15 +78,9 @@ data %>%
   ggbeeswarm::geom_beeswarm(ggplot2::aes(x=date_group,y="H",color=factor(month)), 
                             cex=0.5, groupOnX=F, alpha=0.5, shape=19, na.rm=T)
 
-data %>% 
-  dplyr::filter(month_local == 1) %>%
-  dplyr::arrange(year_local,time_local) %>% 
-  # dplyr::select(time_local,year_local, ETR.Wh.m2.) %>% View
-  ggplot2::ggplot()+
-  ggplot2::geom_line(ggplot2::aes(x=time_local, y=ETR.Wh.m2., 
-                                  group = factor(year_local), color=factor(year_local)), na.rm=T)+
-  ggplot2::facet_grid(rows=vars(month_local), scales = "free")
 
+
+# Interesting Plots -------------------------------------------------------
 
 selection <- data %>% 
   dplyr::group_by(year_local, month_local) %>% 
@@ -89,7 +91,24 @@ selection <- data %>%
 data %>% 
   merge(selection, sort = T) %>% 
   dplyr::arrange(date_local) %>% 
-  # dplyr::filter(year_local %in% c(2003)) %>%
+  dplyr::mutate(timestamp = date %>% as.numeric) %>% 
   ggplot2::ggplot()+
-  ggplot2::geom_path(ggplot2::aes(x=time_local_rel, y=ETR.Wh.m2., group=date, color=factor(month_local)))#+
-  # ggplot2::scale_color_gradient(low="yellow",high="red")
+  ggplot2::geom_path(ggplot2::aes(x=time_local_rel, y=ETR.Wh.m2., group=date, color=month_local) )+
+  ggplot2::scale_color_gradient(low="yellow",high="red") +
+  ggplot2::facet_grid(rows=vars(year_local))
+
+data %>% 
+  dplyr::group_by(year_local, month_local)
+
+point.up <- function(x, value){
+  (x != value) & (cumsum(x != value) == 1)
+}
+data %>% 
+  dplyr::filter(year_local==1976, month_local==1, day_local == 1) %>% 
+  dplyr::select(date,time, date_local, 
+                year_local, month_local, day_local, hour_local, minute_local, 
+                time_local, ETR.Wh.m2.) %>% 
+  dplyr::mutate(x = ETR.Wh.m2.,
+                xrev = rev(x),
+                a = point.up(x,0),
+                b = rev(point.up(xrev,0))) %>% View
