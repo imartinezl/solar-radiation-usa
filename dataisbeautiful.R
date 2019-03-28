@@ -77,7 +77,15 @@ data %>%
   ggplot2::facet_grid(rows=vars(month_local), scales = "free")
 
 
+selection <- data %>% 
+  dplyr::group_by(year_local, month_local) %>% 
+  dplyr::count(day_local) %>% 
+  dplyr::top_n(-1,day_local) %>% 
+  dplyr::select(-n)
+
 data %>% 
-  dplyr::filter(month_local == 1, year_local %in% c(2003,1976)) %>%
+  merge(selection, sort = T) %>% 
+  dplyr::arrange(date_local) %>% 
+  # dplyr::filter(year_local %in% c(2003)) %>%
   ggplot2::ggplot()+
-  ggplot2::geom_path(ggplot2::aes(x=time_local_rel, y=ETR.Wh.m2., group=date_id, color=factor(date)))
+  ggplot2::geom_path(ggplot2::aes(x=time_local_rel, y=ETR.Wh.m2., group=date, color=factor(month_local)))
