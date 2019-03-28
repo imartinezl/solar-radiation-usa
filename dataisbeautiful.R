@@ -58,6 +58,16 @@ ggplot2::ggplot(data)+
   ggplot2::scale_x_datetime()
 
 data %>% 
+  dplyr::select(date) %>% 
+  unique() %>% 
+  dplyr::group_by(date) %>% 
+  dplyr::summarise(count = n()) %>%
+  dplyr::mutate(month = date %>% lubridate::month()) %>% 
+  ggplot2::ggplot()+
+  ggplot2::geom_jitter(ggplot2::aes(x=date,y="H",color=factor(month)), width = 0, height = 0.10, alpha=0.5, shape=19, na.rm=T)
+
+
+data %>% 
   # dplyr::filter(local_month == 1) %>% 
   ggplot2::ggplot()+
   ggplot2::geom_path(ggplot2::aes(x=local_time, y=ETR.Wh.m2., 
