@@ -62,10 +62,13 @@ data %>%
   unique() %>% 
   dplyr::group_by(date) %>% 
   dplyr::summarise(count = n()) %>%
-  dplyr::mutate(month = date %>% lubridate::month()) %>% 
+  dplyr::mutate(month = date %>% lubridate::month(),
+                year = date %>% lubridate::year(),
+                date_group = lubridate::dmy(paste(1,month,year))
+                ) %>% 
   ggplot2::ggplot()+
-  ggplot2::geom_jitter(ggplot2::aes(x=date,y="H",color=factor(month)), width = 0, height = 0.10, alpha=0.5, shape=19, na.rm=T)
-
+  ggbeeswarm::geom_beeswarm(ggplot2::aes(x=date_group,y="H",color=factor(month)), 
+                            cex=0.5, groupOnX=F, alpha=0.5, shape=19, na.rm=T)
 
 data %>% 
   dplyr::filter(month_local == 1) %>%
@@ -88,4 +91,5 @@ data %>%
   dplyr::arrange(date_local) %>% 
   # dplyr::filter(year_local %in% c(2003)) %>%
   ggplot2::ggplot()+
-  ggplot2::geom_path(ggplot2::aes(x=time_local_rel, y=ETR.Wh.m2., group=date, color=factor(month_local)))
+  ggplot2::geom_path(ggplot2::aes(x=time_local_rel, y=ETR.Wh.m2., group=date, color=factor(month_local)))#+
+  # ggplot2::scale_color_gradient(low="yellow",high="red")
