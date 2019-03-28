@@ -68,11 +68,16 @@ data %>%
 
 
 data %>% 
-  # dplyr::filter(local_month == 1) %>% 
+  dplyr::filter(month_local == 1) %>%
+  dplyr::arrange(year_local,time_local) %>% 
+  # dplyr::select(time_local,year_local, ETR.Wh.m2.) %>% View
   ggplot2::ggplot()+
-  ggplot2::geom_path(ggplot2::aes(x=local_time, y=ETR.Wh.m2., 
-                                  group = local_year, color=local_year), na.rm=T)+
-  ggplot2::facet_grid(rows=vars(local_month), scales = "free")
+  ggplot2::geom_line(ggplot2::aes(x=time_local, y=ETR.Wh.m2., 
+                                  group = factor(year_local), color=factor(year_local)), na.rm=T)+
+  ggplot2::facet_grid(rows=vars(month_local), scales = "free")
 
 
-                 
+data %>% 
+  dplyr::filter(month_local == 1, year_local %in% c(2003,1976)) %>%
+  ggplot2::ggplot()+
+  ggplot2::geom_path(ggplot2::aes(x=time_local_rel, y=ETR.Wh.m2., group=date_id, color=factor(date)))
