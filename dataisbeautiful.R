@@ -7,7 +7,7 @@ metadata <- read.csv('TMY3_StationsMeta.csv')
 site_metadata_header <- c("site_id","station_name","station_state","site_time_zone","site_latitude","site_longitude","site_elevation")
 site_metadata <- read.csv('725090TYA.CSV', nrows = 1, header = F, col.names = site_metadata_header)
 
-data_header <- c("date","local_time",
+data_header <- c("date","time",
                  "ETR[Wh/m2]","ETRN[Wh/m2]",
                  "GHI[Wh/m2]","GHI source","GHI unc",
                  "DNI[Wh/m2]","DNI source","DNI unc",
@@ -32,18 +32,26 @@ data_header <- c("date","local_time",
                  "Lprecip depth[mm]","Lprecip quantity[hr]","Lprecip depth source","Lprecip depth unc",
                  "PresWth[-]","PresWth source","PresWth unc")
 data <- read.csv('725090TYA.CSV', skip = 1, header = T, col.names = data_header) %>% 
-  dplyr::mutate(date_local = as.POSIXct(paste0(date, ' ', local_time), format="%d/%m/%Y %H:%M"),
+  dplyr::mutate(date_id = dplyr::group_indices(., date),
+                date_local = lubridate::mdy_hm(paste(date, time)) - lubridate::minutes(1),
                 date_global = date_local + lubridate::hours(site_metadata$site_time_zone),
-                local_year = date_local %>% lubridate::year(),
-                local_month = date_local %>% lubridate::month(),
-                local_hour = date_local %>% lubridate::hour(),
-                local_minute = date_local %>% lubridate::minute(),
-                local_time = local_hour*60 + local_minute,
-                global_year = date_local %>% lubridate::year(),
-                global_month = date_local %>% lubridate::month(),
-                global_hour = date_global %>% lubridate::hour(),
-                global_minute = date_global %>% lubridate::minute(),
-                global_time = global_hour*60 + global_minute)
+                year_local = date_local %>% lubridate::year(),
+                month_local = date_local %>% lubridate::month(),
+                day_local = date_local %>% lubridate::day(),
+                hour_local = date_local %>% lubridate::hour(),
+                minute_local = date_local %>% lubridate::minute(),
+                time_local = as.numeric(date_local),
+                year_global = date_global %>% lubridate::year(),
+                month_global = date_global %>% lubridate::month(),
+                hour_global = date_global %>% lubridate::hour(),
+                minute_global = date_global %>% lubridate::minute(),
+                time_global = as.numeric(date_global),
+                date = as.Date(date, format="%m/%d/%Y")) %>% 
+  dplyr::group_by(date_id) %>% 
+  dplyr::mutate(time_local_rel = time_local-min(time_local),
+                time_global_rel = time_global-min(time_global)) %>% 
+  dplyr::ungroup()
+data[1:25,] %>% View
 
 ggplot2::ggplot(data)+
   ggplot2::geom_point(ggplot2::aes(x=date_local, y=ETR.Wh.m2.), na.rm=T)+
