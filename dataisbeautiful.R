@@ -3,7 +3,10 @@
 # Libraries ---------------------------------------------------------------
 
 library(dplyr)
+library(ggplot2)
 library(zeallot)
+Sys.setlocale("LC_TIME", "en_US.UTF-8") 
+Sys.getlocale("LC_TIME")
 
 # Data Importation --------------------------------------------------------
 
