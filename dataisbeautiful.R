@@ -59,14 +59,10 @@ data <- read.csv('725090TYA.CSV', skip = 1, header = T, col.names = data_header)
   dplyr::mutate(time_local_rel = time_local-min(time_local),
                 time_global_rel = time_global-min(time_global)) %>% 
   dplyr::ungroup()
-data[1:25,] %>% View
+
 
 
 # Exploration Plots -------------------------------------------------------
-
-ggplot2::ggplot(data)+
-  ggplot2::geom_point(ggplot2::aes(x=date_local, y=ETR.Wh.m2.), na.rm=T)+
-  ggplot2::scale_x_datetime()
 
 data %>% 
   dplyr::select(date) %>% 
@@ -89,8 +85,10 @@ selection <- data %>%
   dplyr::group_by(year_local, month_local) %>% 
   dplyr::count(day_local) %>% 
   dplyr::top_n(-1,day_local) %>% 
-  dplyr::select(-n)
+  dplyr::select(-n) %>% 
+  dplyr::ungroup()
 
+# ETR in first day of month, per year
 data %>% 
   merge(selection, sort = T) %>% 
   dplyr::arrange(date_local) %>% 
@@ -100,18 +98,75 @@ data %>%
   ggplot2::scale_color_gradient(low="yellow",high="red") +
   ggplot2::facet_grid(rows=vars(year_local))
 
+# ETR independent of year
+format_date <- function(x) {
+  as.Date(x, origin=lubridate::origin)%>% format(format="%B")
+}
 data %>% 
-  dplyr::group_by(year_local, month_local)
+  dplyr::mutate(timestamp = date %>% as.numeric,
+                day_of_year = timestamp %% 365 - 1,
+                day_of_year_date = (day_of_year) %>% as.Date(origin="1970-01-01"),
+                date_local_rel = time_local_rel %>% as.POSIXct(origin="1970-01-01") ) %>% #select(day_of_year,day_of_year_date) %>% head(25)
+  ggplot2::ggplot()+
+  # ggplot2::geom_path(data = . %>% dplyr::filter(day_local==1),
+  # ggplot2::aes(x=date_local_rel, y=ETR.Wh.m2., group=date), color="black", linetype="dotted",alpha=1)+
+  ggplot2::geom_path(ggplot2::aes(x=date_local_rel, y=ETR.Wh.m2., group=date, color=day_of_year), alpha=0.4)+
+  ggplot2::scale_color_gradientn(name="", labels = format_date, breaks=seq(1,365,by = 30),
+                                 colors = c( rev(heat.colors(3)), heat.colors(3) ) ) +
+  ggplot2::scale_x_datetime(labels = scales::date_format("%H:00"), date_breaks = "2 hours", 
+                            limits = c(0,24*3600)  %>% as.POSIXct(origin="1970-01-01") )+
+  ggplot2::scale_y_continuous(name=bquote(ETR~Wh/m^2), breaks = scales::pretty_breaks(n=5))+
+  hrbrthemes::theme_ipsum_rc()+
+  ggplot2::theme(axis.title.x = ggplot2::element_blank(),
+                 legend.key.height = grid::unit(1.2, "cm"),
+                 legend.text = ggplot2::element_text(size = ggplot2::rel(1)) )+
+  ggplot2::coord_polar(theta="x")
 
+
+# Visualize start, stop and maximum points ------------------------------------------
 point.up <- function(x, value){
   (x != value) & (cumsum(x != value) == 1)
 }
 data %>% 
-  dplyr::filter(year_local==1976, month_local==1, day_local == 1) %>% 
-  dplyr::select(date,time, date_local, 
-                year_local, month_local, day_local, hour_local, minute_local, 
-                time_local, ETR.Wh.m2.) %>% 
+  dplyr::filter(day_local==1, month_local==1, year_local==1976 ) %>% 
   dplyr::mutate(x = ETR.Wh.m2.,
-                xrev = rev(x),
-                a = point.up(x,0),
-                b = rev(point.up(xrev,0))) %>% View
+                start = point.up(x,0),
+                stop = rev(point.up(rev(x),0)),
+                maximum = x == max(x),
+                x_max = max(x),
+                date_local_max = date_local[which(maximum)],
+                date_local_start = date_local[which(start)],
+                date_local_stop = date_local[which(stop)] ) %>% 
+  ggplot2::ggplot() +
+  ggplot2::geom_line(ggplot2::aes(x=date_local, y=x), color="#111111", size=1, na.rm=T )+
+  ggplot2::geom_segment(ggplot2::aes(x=date_local_max, xend=date_local_max, y=0, yend=max(x)),
+                        color="red", linetype="dashed", na.rm=T )+
+  ggplot2::geom_label(ggplot2::aes(x=date_local_max, y=max(x), label="Maximum ETR"), color="red", na.rm=T )+
+  ggplot2::geom_segment(ggplot2::aes(x=date_local_start, xend=date_local_start, y=0, yend=max(x)),
+                        color="orange", linetype="dashed", na.rm=T )+
+  ggplot2::geom_label(ggplot2::aes(x=date_local_start, y=max(x), label="Dawn"), color="orange", na.rm=T )+
+  ggplot2::geom_segment(ggplot2::aes(x=date_local_stop, xend=date_local_stop, y=0, yend=max(x)),
+                        color="blue", linetype="dashed",na.rm=T )+
+  ggplot2::geom_label(ggplot2::aes(x=date_local_stop, y=max(x), label="Dusk"), color="blue", na.rm=T )+
+  ggplot2::scale_x_datetime(labels = scales::date_format("%H:00"), date_breaks = "2 hours")+
+  ggplot2::scale_y_continuous(name = bquote(ETR~Wh/m^2))+
+  ggplot2::scale_color_gradientn(colors = rev(heat.colors(10)))+
+  hrbrthemes::theme_ipsum_rc()+
+  ggplot2::theme(axis.title.x = ggplot2::element_blank())+
+  ggplot2::coord_polar(theta="x")
+
+
+data %>% 
+  dplyr::group_by(day_local, month_local) %>% 
+  dplyr::mutate(x = ETR.Wh.m2.,
+                start = point.up(x,0),
+                stop = rev(point.up(rev(x),0)),
+                maximum = x == max(x)) %>% 
+  dplyr::summarise(x_max = max(x),
+                   date_local_max = hour_local[which(maximum)],
+                   date_local_start = hour_local[which(start)],
+                   date_local_stop = hour_local[which(stop)]) %>% 
+  dplyr::mutate(date_chr = paste(month_local,day_local),
+                date = date_chr %>% as.Date(format="%m %d")) %>% 
+  ggplot2::ggplot() +
+  ggplot2::geom_point(ggplot2::aes(x=date, y=x_max))
