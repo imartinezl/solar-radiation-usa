@@ -5,5 +5,6 @@
 packrat/lib*/
 packrat/src/
 .DS_Store
+rsconnect/*
 alltmy3a.zip
 alltmy3a/
