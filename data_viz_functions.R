@@ -52,7 +52,7 @@ read.data <- function(file, site_metadata){
     dplyr::ungroup()
 }
 
-file <- "allmy3a/725090TYA.CSV"
+file <- "./alltmy3a/725090TYA.CSV"
 site_metadata <- read.site.metadata(file)
 data <- read.data(file,site_metadata)
 
@@ -72,7 +72,7 @@ plot.availability <- function(data){
     ggbeeswarm::geom_beeswarm(ggplot2::aes(x=date_group,y="H",color=factor(month)), 
                               cex=0.5, groupOnX=F, alpha=0.5, shape=19, na.rm=T)
 }
-plot.availability(data)
+# plot.availability(data)
 
 # Interesting Plots -------------------------------------------------------
 
@@ -97,10 +97,10 @@ plot.oneDayPerMonth <- function(data, variable){
     ggplot2::scale_color_gradient(low="yellow",high="red") +
     ggplot2::facet_grid(rows=vars(year_local))
 }
-variable <- "ETR.Wh.m2."
-plot.oneDayPerMonth(data,variable)
+# variable <- "ETR.Wh.m2."
+# plot.oneDayPerMonth(data,variable)
 
-plot.oneYearPolar <- function(data, variable, variable_name=NULL){
+plot.oneYear <- function(data, variable, variable_name=NULL){
   if(!(variable %in% names(data))){
     stop("hey, variable does not exist")
   }
@@ -131,20 +131,29 @@ plot.oneYearPolar <- function(data, variable, variable_name=NULL){
                    legend.text = ggplot2::element_text(size = ggplot2::rel(1)) )+
     ggplot2::coord_polar(theta="x")
 }
-
-variable <- "ETR.Wh.m2."
-variable_name <- bquote(ETR~Wh/m^2)
-plot.oneYear(data, variable, variable_name)
+# variable <- "ETR.Wh.m2."
+# variable_name <- bquote(ETR~Wh/m^2)
+# plot.oneYear(data, variable, variable_name)
 
 # Visualize start, stop and maximum points ------------------------------------------
 
-plot.specificDay <- function(data, date, variable){
-  point.up <- function(x, value){
-    (x != value) & (cumsum(x != value) == 1)
+point.up <- function(x, value){
+  (x != value) & (cumsum(x != value) == 1)
+}
+plot.specificDay <- function(data, date, variable, variable_name=NULL){
+  if(!(variable %in% names(data))){
+    stop("hey, variable does not exist")
   }
+  if(is.null(variable_name)){
+    variable_name <- variable
+  }
+
   year <- date %>% lubridate::ymd() %>% lubridate::year()
   month <- date %>% lubridate::ymd() %>% lubridate::month()
   day <- date %>% lubridate::ymd() %>% lubridate::day()
+  # if(data %>% dplyr::filter(day_local==day, month_local==month, year_local==year ) %>% nrow() == 0){
+  #   stop("Sorry, there is no information about that date")
+  # }
   data %>% 
     dplyr::filter(day_local==day, month_local==month, year_local==year ) %>% 
     dplyr::mutate_(x = variable) %>% 
@@ -166,30 +175,44 @@ plot.specificDay <- function(data, date, variable){
     ggplot2::geom_segment(ggplot2::aes(x=date_local_stop, xend=date_local_stop, y=0, yend=max(x)),
                           color="blue", linetype="dashed",na.rm=T )+
     ggplot2::geom_label(ggplot2::aes(x=date_local_stop, y=max(x), label="Dusk"), color="blue", na.rm=T )+
-    ggplot2::scale_x_datetime(labels = scales::date_format("%H:00"), date_breaks = "2 hours")+
-    ggplot2::scale_y_continuous(name = bquote(ETR~Wh/m^2))+
+    ggplot2::scale_x_datetime(labels = scales::date_format("%H:00"), date_breaks = "2 hours",
+                              limits = c(0,24*3600)  %>% as.POSIXct(origin=date) )+
+    ggplot2::scale_y_continuous(name = variable_name)+
     ggplot2::scale_color_gradientn(colors = rev(heat.colors(10)))+
     hrbrthemes::theme_ipsum_rc()+
     ggplot2::theme(axis.title.x = ggplot2::element_blank())+
     ggplot2::coord_polar(theta="x")
 }
-date <- "1976-01-02"
-variable <- "ETR.Wh.m2."
-plot.specificDay(data,date,variable)
+# date <- "1976-01-02"
+# variable <- "ETR.Wh.m2."
+# variable_name <- bquote(ETR~Wh/m^2)
+# plot.specificDay(data,date,variable, variable_name)
 
-
-data %>% 
-  dplyr::group_by(day_local, month_local) %>% 
-  dplyr::mutate(x = ETR.Wh.m2.,
-                start = point.up(x,0),
-                stop = rev(point.up(rev(x),0)),
-                maximum = x == max(x)) %>% 
-  dplyr::summarise(x_max = max(x),
-                   date_local_max = hour_local[which(maximum)],
-                   date_local_start = hour_local[which(start)],
-                   date_local_stop = hour_local[which(stop)]) %>% 
-  dplyr::mutate(date_chr = paste(month_local,day_local),
-                date = date_chr %>% as.POSIXct(origin=lubridate::origin, format="%m %d")) %>% 
-  ggplot2::ggplot() +
-  ggplot2::geom_line(ggplot2::aes(x=date, y=x_max))+
-  ggplot2::scale_x_datetime(labels = scales::date_format("%B"), date_breaks = "1 month")
+plot.maximum <- function(data, variable, variable_name ){
+  if(!(variable %in% names(data))){
+    stop("hey, variable does not exist")
+  }
+  if(is.null(variable_name)){
+    variable_name <- variable
+  }
+  data %>% 
+    dplyr::group_by(day_local, month_local) %>% 
+    dplyr::mutate_(x = variable) %>% 
+    dplyr::mutate(start = point.up(x,0),
+                  stop = rev(point.up(rev(x),0)),
+                  maximum = x == max(x)) %>% 
+    dplyr::summarise(x_max = max(x),
+                     date_local_max = hour_local[which(maximum)] %>% head(1),
+                     date_local_start = hour_local[which(start)],
+                     date_local_stop = hour_local[which(stop)]) %>% 
+    dplyr::mutate(date_chr = paste(month_local,day_local),
+                  date = date_chr %>% as.POSIXct(origin=lubridate::origin, format="%m %d")) %>% 
+    ggplot2::ggplot() +
+    ggplot2::geom_line(ggplot2::aes(x=date, y=x_max))+
+    ggplot2::scale_x_datetime(labels = scales::date_format("%B"), date_breaks = "1 month")+
+    ggplot2::scale_y_continuous(name = variable_name)+
+    hrbrthemes::theme_ipsum_rc()+
+    ggplot2::theme(axis.title.x = ggplot2::element_blank())+
+    ggplot2::coord_polar(theta="x")
+}
+# plot.maximum(data,variable, variable_name)
