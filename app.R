@@ -13,9 +13,9 @@ library(dplyr)
 library(ggplot2)
 library(zeallot)
 library(shiny)
-Sys.setlocale("LC_TIME", "en_US.UTF-8") 
-Sys.getlocale("LC_TIME")
-Sys.setenv(LANG = "en")
+# Sys.setlocale("LC_TIME", "en_US.UTF-8") 
+# Sys.getlocale("LC_TIME")
+# Sys.setenv(LANG = "en")
 
 source('data_viz_functions.R', echo=F)
 
@@ -35,42 +35,45 @@ metadata <- read.csv('TMY3_StationsMeta.csv', stringsAsFactors = F) %>%
 # Define UI for application that draws a histogram
 ui <- shiny::fluidPage(
   theme = shinythemes::shinytheme("sandstone"),#"journal"
-  tags$head(
-    tags$link(rel = "stylesheet", type = "text/css", href = "style.css")
+  shiny::tags$head(
+    shiny::tags$link(rel = "stylesheet", type = "text/css", href = "style.css"),
+    shiny::tags$script(src="https://buttons.github.io/buttons.js")
+    
   ),
-
+  
   title = "National Solar Radiation",
   
+  
+  shiny::div(class="github",shiny::HTML('<a class="github-button" href="https://github.com/imartinezl/solar-radiation-usa" data-icon="octicon-star" data-size="large" data-show-count="true" aria-label="Star imartinezl/solar-radiation-usa on GitHub">Star</a>')),
   shiny::titlePanel("National Solar Radiation - USA"),
-  shiny::tags$p("Source:", shiny::a("TMY3 Dataset", href="https://rredc.nrel.gov/solar/old_data/nsrdb/1991-2005/tmy3/")),
-  
-  hr(),
-  
+  shiny::tags$p("Source:", shiny::tags$a("TMY3 Dataset", href="https://rredc.nrel.gov/solar/old_data/nsrdb/1991-2005/tmy3/", target="_blank")),
   shiny::fluidRow(
     shiny::column(6,
-                  leaflet::leafletOutput("map")
-                  ),
+                  shinycssloaders::withSpinner(leaflet::leafletOutput("map"), type=1, color="#ffcc66")
+    ),
     shiny::column(6,
-                  shiny::tags$p("Click on any point on the map to access Solar Radiation information"),
-                  shiny::uiOutput("select_ui"),
+                  shiny::tags$p(
+                    "Click on any point on the map to access",
+                    shiny::tags$a("Solar Radiation information", onclick = "window.open('43156.pdf')")
+                  ),
                   shiny::tableOutput('tbl'),
-                  shiny::actionButton("pdf", "More about TMY3", onclick = "window.open('43156.pdf')")
+                  shiny::uiOutput("select_ui")
     )
   ),
-  hr(),
+  shiny::tags$hr(),
   shiny::fluidRow(
     shiny::column(4, 
                   shiny::tags$h4("Value along the year"),
-                  shiny::plotOutput("plot_one_year", width = "100%", height = "600px")),
+                  shinycssloaders::withSpinner(shiny::plotOutput("plot_one_year", height = 500, width = "100%"), type=6, color="#ffcc66")),
     shiny::column(4, 
                   shiny::tags$h4("Maximum value at each day"),
-                  shiny::plotOutput("plot_maximum")),
+                  shinycssloaders::withSpinner(shiny::plotOutput("plot_maximum", height = 400, width = "100%"), type=6, color="#ffcc66")),
     shiny::column(4, 
                   shiny::fluidRow(
                     shiny::column(8,shiny::tags$h4("Value on a specific day")),
-                    shiny::column(4,shiny::uiOutput("date_ui"))
+                    shiny::column(4,class="date-container",shiny::uiOutput("date_ui"))
                   ),
-                  shiny::plotOutput("plot_specific_day")
+                  shinycssloaders::withSpinner(shiny::plotOutput("plot_specific_day", height = 400,width = "100%"), type=6, color="#ffcc66")
     )
   )
   
@@ -142,7 +145,7 @@ server <- function(input, output) {
   })
   shiny::observeEvent({
     input$date
-    },{
+  },{
     if(!is.null(input$date)){
       variable_name <- NULL
       output$plot_specific_day <-  shiny::renderPlot({plot.specificDay(shiny::isolate(values$data), input$date, input$variable, variable_name)}, bg="transparent")
