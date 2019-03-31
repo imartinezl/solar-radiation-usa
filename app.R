@@ -135,7 +135,9 @@ server <- function(input, output) {
                        value = initial_date, datesdisabled = disable_dates, width = "120px")
     })
   })
-  shiny::observeEvent(input$variable,{
+  shiny::observeEvent({
+    values$id
+    input$variable},{
     if(!is.null(input$variable)){
       # variable_name <- bquote(ETR~Wh/m^2)
       variable_name <- NULL
