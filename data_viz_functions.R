@@ -127,8 +127,10 @@ plot.oneYear <- function(data, variable, variable_name=NULL){
     ggplot2::scale_y_continuous(name=variable_name, breaks = scales::pretty_breaks(n=5))+
     hrbrthemes::theme_ipsum_rc()+
     ggplot2::theme(axis.title.x = ggplot2::element_blank(),
-                   legend.key.height = grid::unit(1.2, "cm"),
-                   legend.text = ggplot2::element_text(size = ggplot2::rel(1)) )+
+                   legend.key.width = grid::unit(1.5, "cm"),
+                   legend.text = ggplot2::element_text(size = ggplot2::rel(1), angle = 50, hjust = 1, vjust=1),
+                   legend.position = "bottom"
+                   )+
     ggplot2::coord_polar(theta="x")
 }
 # variable <- "ETR.Wh.m2."
