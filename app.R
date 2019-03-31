@@ -34,31 +34,40 @@ metadata <- read.csv('TMY3_StationsMeta.csv', stringsAsFactors = F) %>%
 
 # Define UI for application that draws a histogram
 ui <- shiny::fluidPage(
-  theme = shinythemes::shinytheme("journal"),
+  theme = shinythemes::shinytheme("sandstone"),#"journal"
+  tags$head(
+    tags$link(rel = "stylesheet", type = "text/css", href = "style.css")
+  ),
+
   title = "National Solar Radiation",
   
   shiny::titlePanel("National Solar Radiation - USA"),
-  shiny::tags$p("Click on any point on the map to access Solar Radiation information"),
+  shiny::tags$p("Source:", shiny::a("TMY3 Dataset", href="https://rredc.nrel.gov/solar/old_data/nsrdb/1991-2005/tmy3/")),
+  
   hr(),
   
   shiny::fluidRow(
     shiny::column(6,
-                  leaflet::leafletOutput("map"),
-                  shiny::tableOutput('tbl'),
-                  shiny::uiOutput("select_ui")
+                  leaflet::leafletOutput("map")
                   ),
-    shiny::column(6, 
-                  shiny::tags$h4("Value along the year"),
-                  shiny::plotOutput("plot_one_year", width = "100%"))
+    shiny::column(6,
+                  shiny::tags$p("Click on any point on the map to access Solar Radiation information"),
+                  shiny::uiOutput("select_ui"),
+                  shiny::tableOutput('tbl'),
+                  shiny::actionButton("pdf", "More about TMY3", onclick = "window.open('43156.pdf')")
+    )
   ),
   hr(),
   shiny::fluidRow(
-    shiny::column(6, 
+    shiny::column(4, 
+                  shiny::tags$h4("Value along the year"),
+                  shiny::plotOutput("plot_one_year", width = "100%", height = "600px")),
+    shiny::column(4, 
                   shiny::tags$h4("Maximum value at each day"),
                   shiny::plotOutput("plot_maximum")),
-    shiny::column(6, 
+    shiny::column(4, 
                   shiny::fluidRow(
-                    shiny::column(4,shiny::tags$h4("Value on a specific day")),
+                    shiny::column(8,shiny::tags$h4("Value on a specific day")),
                     shiny::column(4,shiny::uiOutput("date_ui"))
                   ),
                   shiny::plotOutput("plot_specific_day")
@@ -127,8 +136,8 @@ server <- function(input, output) {
     if(!is.null(input$variable)){
       # variable_name <- bquote(ETR~Wh/m^2)
       variable_name <- NULL
-      output$plot_one_year <- shiny::renderPlot({plot.oneYear(shiny::isolate(values$data),input$variable, variable_name)})
-      output$plot_maximum <-  shiny::renderPlot({plot.maximum(shiny::isolate(values$data),input$variable, variable_name)})
+      output$plot_one_year <- shiny::renderPlot({plot.oneYear(shiny::isolate(values$data),input$variable, variable_name)}, bg="transparent")
+      output$plot_maximum <-  shiny::renderPlot({plot.maximum(shiny::isolate(values$data),input$variable, variable_name)}, bg="transparent")
     }
   })
   shiny::observeEvent({
@@ -136,7 +145,7 @@ server <- function(input, output) {
     },{
     if(!is.null(input$date)){
       variable_name <- NULL
-      output$plot_specific_day <-  shiny::renderPlot({plot.specificDay(shiny::isolate(values$data), input$date, input$variable, variable_name)})
+      output$plot_specific_day <-  shiny::renderPlot({plot.specificDay(shiny::isolate(values$data), input$date, input$variable, variable_name)}, bg="transparent")
     }
   })
 }
